@@ -4,7 +4,6 @@ services:
     build:
       context: ./backend
     container_name: tray_backend
-    restart: unless-stopped
     ports:
       - "8000:8000"
     volumes:
@@ -17,8 +16,7 @@ services:
   frontend:
     build:
       context: ./frontend
-    container_name: tray-frontend
-    restart: unless-stopped
+    container_name: tray_frontend
     ports:
       - "5173:5173"
     volumes:
@@ -28,14 +26,17 @@ services:
 
   db:
     image: mysql:8.0
-    container_name: tray_db
-    restart: unless-stopped
-    env_file:
-      - ./backend/.env
+    container_name: tray_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: tray_root
+      MYSQL_ALLOW_EMPTY_PASSWORD: 1
+      MYSQL_USER: tray_username
+      MYSQL_PASSWORD: tray_password
+      MYSQL_DATABASE: tray_database
     ports:
     - "13306:3306"
     volumes:
-      - tray_db_data:/var/lib/mysql
+      - db_data:/var/lib/mysql
     networks:
       - tray_network
 
@@ -44,5 +45,5 @@ networks:
     driver: bridge
 
 volumes:
-  tray_db_data:
+  db_data:
     driver: local

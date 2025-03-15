@@ -2,21 +2,44 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\AuthException;
+use App\Http\Requests\LoginRequest;
+use App\Http\Resources\AuthResource;
+use App\Services\Auth\AuthServiceInterface;
+use App\Services\Logging\ErrorLoggerService;
+use Exception;
+use Illuminate\Http\Response;
 use Tymon\JWTAuth\Facades\JWTAuth;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
-    public function login(Request $request)
+    public function __construct(
+        protected AuthServiceInterface $authService
+    ) {}
+
+    public function login(LoginRequest $request)
     {
-        $credentials = $request->only(['email', 'password']);
+        try {
+            $Authenticated = $this->authService->login($request);
 
-        if ($token = JWTAuth::attempt($credentials)) {
-            return response()->json(['token' => $token]);
+            if ($Authenticated) {
+                $data = new AuthResource($Authenticated);
+
+                return response()->json([
+                    'message' => 'Login realizado com sucesso!',
+                    'data' => $data,
+                ]);
+            }
+
+            return response()->json(['error' => 'Credenciais inválidas'], Response::HTTP_UNAUTHORIZED);
+        } catch (AuthException $e) {
+            ErrorLoggerService::logError('Erro na autenticação', $e);
+            return response()->json(['error' => $e->getMessage()], Response::HTTP_UNAUTHORIZED);
+        } catch (Exception $e) {
+            ErrorLoggerService::logError('Erro interno do servidor', $e);
+            return response()->json(['error' => 'Erro interno do servidor'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
-
-        return response()->json(['error' => 'Credenciais inválidas'], 401);
     }
 
     public function logout()

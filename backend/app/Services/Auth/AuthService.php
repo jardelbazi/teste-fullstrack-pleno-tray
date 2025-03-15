@@ -31,4 +31,9 @@ class AuthService implements AuthServiceInterface
             throw new AuthException($e->getMessage(), $e->getCode());
         }
     }
+
+    public function logout(): void
+    {
+        JWTAuth::invalidate(JWTAuth::getToken());
+    }
 }

@@ -44,9 +44,14 @@ class AuthController extends Controller
 
     public function logout()
     {
-        JWTAuth::invalidate(JWTAuth::getToken());
+        try {
+            $this->authService->logout();
 
-        return response()->json(['message' => 'Logout realizado com sucesso!']);
+            return response()->json(['message' => 'Logout realizado com sucesso!']);
+        } catch (Exception $e) {
+            ErrorLoggerService::logError('Erro ao realizar o logout', $e);
+            return response()->json(['error' => 'Erro ao realizar o logout'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     public function me()

@@ -8,4 +8,6 @@ use App\Http\Requests\LoginRequest;
 interface AuthServiceInterface
 {
     public function login(LoginRequest $request): ?AuthUpdateDTO;
+
+    public function logout(): void;
 }
